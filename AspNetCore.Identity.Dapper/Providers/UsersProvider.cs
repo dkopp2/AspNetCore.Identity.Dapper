@@ -21,7 +21,8 @@ namespace AspNetCore.Identity.Dapper.Providers
         public async Task<IdentityResult> CreateAsync(ApplicationUser user) {
             var command = $"INSERT INTO [{_databaseConnectionFactory.DbSchema}].[AspNetUsers] " +
                                    "VALUES (@Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @SecurityStamp, @ConcurrencyStamp, " +
-                                           "@PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount, @UserType, @IsActive);";
+                                           "@PhoneNumber, @PhoneNumberConfirmed, @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount, @UserType, @IsActive," +
+                                           "@FirstName, @LastName, @RefreshToken, @RefreshTokenExpiryTime);";
 
             int rowsInserted;
 
@@ -43,7 +44,11 @@ namespace AspNetCore.Identity.Dapper.Providers
                     user.LockoutEnabled,
                     user.AccessFailedCount,
                     user.UserType,
-                    user.IsActive
+                    user.IsActive,
+                    user.FirstName,
+                    user.LastName,
+                    user.RefreshToken,
+                    user.RefreshTokenExpiryTime
                 });
             }
 
@@ -115,7 +120,7 @@ namespace AspNetCore.Identity.Dapper.Providers
                 "SET UserName = @UserName, NormalizedUserName = @NormalizedUserName, Email = @Email, NormalizedEmail = @NormalizedEmail, EmailConfirmed = @EmailConfirmed, " +
                     "PasswordHash = @PasswordHash, SecurityStamp = @SecurityStamp, ConcurrencyStamp = @ConcurrencyStamp, PhoneNumber = @PhoneNumber, " +
                     "PhoneNumberConfirmed = @PhoneNumberConfirmed, TwoFactorEnabled = @TwoFactorEnabled, LockoutEnd = @LockoutEnd, LockoutEnabled = @LockoutEnabled, " +
-                    "AccessFailedCount = @AccessFailedCount, UserType = @UserType, IsActive = @IsActive " +
+                    "AccessFailedCount = @AccessFailedCount, UserType = @UserType, IsActive = @IsActive, FirstName = @FirstName, LastName = @LastName, RefreshToken = @RefreshToken, RefreshTokenExpiryTime = @RefreshTokenExpiryTime " +
                 "WHERE Id = @Id;";
 
              await using (var sqlConnection = await _databaseConnectionFactory.CreateConnectionAsync())
@@ -138,7 +143,11 @@ namespace AspNetCore.Identity.Dapper.Providers
                     user.AccessFailedCount,
                     user.Id,
                     user.UserType,
-                    user.IsActive
+                    user.IsActive,
+                    user.FirstName,
+                    user.LastName,
+                    user.RefreshToken,
+                    user.RefreshTokenExpiryTime
                 }, transaction);
 
                 if (user.Claims?.Count > 0) {
