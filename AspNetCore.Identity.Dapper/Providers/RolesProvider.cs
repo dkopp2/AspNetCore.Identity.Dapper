@@ -17,6 +17,60 @@ namespace AspNetCore.Identity.Dapper.Providers
         {
             _databaseConnectionFactory = databaseConnectionFactory;
         }
+        public async Task<IdentityResult> UpsertAsync(ApplicationRole role, CancellationToken cancellationToken)
+        {
+            var command = $@"
+                    MERGE [{ _databaseConnectionFactory.DbSchema}].AspNetRoles t
+                        USING(
+                            SELECT
+
+                                @Id
+                                , @Name
+                                , @NormalizedName
+                                , @ConcurrencyStamp
+                        ) s
+                            (Id, [Name], NormalizedName, ConcurrencyStamp)
+                        ON t.Id = s.Id
+                        WHEN MATCHED AND (t.[ConcurrencyStamp] = s.[ConcurrencyStamp] OR s.[ConcurrencyStamp] IS NULL) THEN
+                        UPDATE
+                            SET
+
+                                t.[Name] = s.[Name]
+							    , t.NormalizedName = s.[NormalizedName]
+							    , t.[ConcurrencyStamp] = NEWID()
+                        WHEN NOT MATCHED BY TARGET
+                        THEN INSERT
+                        (
+                            [Id]
+                            , [Name]
+						    , [NormalizedName]
+                            , [ConcurrencyStamp]
+                        ) VALUES(
+                            s.[Id]
+                            , s.[Name]
+                            , s.[NormalizedName]
+                            , NEWID()
+                        ); ";
+
+            int rowsInserted;
+
+            await using (var sqlConnection = await _databaseConnectionFactory.CreateConnectionAsync())
+            {
+                rowsInserted = await sqlConnection.ExecuteAsync(command, new
+                {
+                    role.Id,
+                    role.Name,
+                    role.NormalizedName,
+                    role.ConcurrencyStamp
+                });
+            }
+
+            return rowsInserted == 1 ? IdentityResult.Success : IdentityResult.Failed(new IdentityError
+            {
+                Code = string.Empty,
+                Description = $"The role with name {role.Name} could not be upserted."
+            });
+        }
 
         public async Task<IdentityResult> CreateAsync(ApplicationRole role, CancellationToken cancellationToken) {
             var command = $"INSERT INTO [{_databaseConnectionFactory.DbSchema}].AspNetRoles " +

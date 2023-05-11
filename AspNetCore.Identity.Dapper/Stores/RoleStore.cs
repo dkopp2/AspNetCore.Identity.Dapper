@@ -30,7 +30,7 @@ namespace AspNetCore.Identity.Dapper.Stores
         public Task<IdentityResult> CreateAsync(ApplicationRole role, CancellationToken cancellationToken) {
             cancellationToken.ThrowIfCancellationRequested();
             role.ThrowIfNull(nameof(role));
-            return _rolesTable.CreateAsync(role, cancellationToken);
+            return _rolesTable.UpsertAsync(role, cancellationToken);
         }
 
         public Task<IdentityResult> UpdateAsync(ApplicationRole role, CancellationToken cancellationToken) {
